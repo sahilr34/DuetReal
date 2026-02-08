@@ -2,13 +2,13 @@
 using UnityEngine.Advertisements;
 using System.Collections;
 using UnityEngine.SceneManagement;
-using System; // Action delegate के लिए
+using System;
 
 public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityAdsLoadListener, IUnityAdsShowListener
 {
     [Header("Ad Settings")]
-    public string androidGameId = "598283";
-    public string iosGameId = "598283";
+    public string androidGameId = "5982831";
+    public string iosGameId = "5982830";
     public string androidInterstitialAdUnitId = "Interstitial_Android";
     public string iosInterstitialAdUnitId = "Interstitial_iOS";
     public string androidRewardedAdUnitId = "Rewarded_Android";
@@ -33,6 +33,7 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
     private bool shouldShowAdOnRestart = false;
 
     private Action restartCallback; // Restart callback store करें
+    private string targetSceneName = ""; // Restart करने के लिए target scene
 
     // Events
     public System.Action OnAdCompleted;
@@ -65,19 +66,20 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
         // Scene load होने पर audio unpause करें
         AudioListener.pause = false;
 
-        // अगर ad restart के लिए था, तो callback call करें
+        // Restart callback execute करें (scene load के बाद)
         if (shouldShowAdOnRestart && restartCallback != null)
         {
             restartCallback.Invoke();
             restartCallback = null;
+            shouldShowAdOnRestart = false;
         }
-        shouldShowAdOnRestart = false;
     }
 
-    // नया method restart के लिए
-    public void RequestRestartWithAd(Action callback)
+    // नया method restart के लिए - scene name भी pass करें
+    public void RequestRestartWithAd(Action callback, string sceneName = "")
     {
         restartCallback = callback;
+        targetSceneName = sceneName;
 
         float timeSinceLastAd = Time.unscaledTime - lastAdTime;
 
@@ -86,7 +88,7 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
         {
             // Random chance to show ad
             float randomValue = UnityEngine.Random.Range(0f, 1f);
-            if (randomValue <= adChanceOnRestart)
+            if (randomValue <= adChanceOnRestart && isInterstitialAdLoaded)
             {
                 shouldShowAdOnRestart = true;
                 ShowInterstitialAd();
@@ -98,6 +100,12 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
         OnAdCompleted?.Invoke();
         shouldShowAdOnRestart = false;
         callback?.Invoke();
+    }
+
+    // Overloaded method for backward compatibility
+    public void RequestRestartWithAd(Action callback)
+    {
+        RequestRestartWithAd(callback, "");
     }
 
     public void OnInitializationComplete()
@@ -187,6 +195,7 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
                 restartCallback = null;
             }
             OnAdCompleted?.Invoke();
+            shouldShowAdOnRestart = false;
             return;
         }
 
@@ -235,8 +244,16 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
     {
         Debug.LogError($"❌ Failed to load Ad: {adUnitId}, Error: {error} - {message}");
 
-        if (adUnitId == GetInterstitialAdUnitId()) StartCoroutine(RetryLoadAd(5f, true));
-        if (adUnitId == GetRewardedAdUnitId()) StartCoroutine(RetryLoadAd(5f, false));
+        if (adUnitId == GetInterstitialAdUnitId())
+        {
+            isInterstitialAdLoaded = false;
+            StartCoroutine(RetryLoadAd(5f, true));
+        }
+        if (adUnitId == GetRewardedAdUnitId())
+        {
+            isRewardedAdLoaded = false;
+            StartCoroutine(RetryLoadAd(5f, false));
+        }
     }
 
     private IEnumerator RetryLoadAd(float delay, bool isInterstitial)
@@ -278,6 +295,10 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
     {
         Debug.Log($"✅ Ad Completed: {adUnitId}, State: {showCompletionState}");
 
+        isAdShowing = false;
+        Time.timeScale = 1f;
+        AudioListener.pause = false;
+
         // Handle rewarded ad completion
         if (adUnitId == GetRewardedAdUnitId() && showCompletionState == UnityAdsShowCompletionState.COMPLETED)
         {
@@ -288,13 +309,10 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
         else if (adUnitId == GetInterstitialAdUnitId())
         {
             lastAdTime = Time.unscaledTime; // Update last ad time
+            OnAdCompleted?.Invoke();
         }
 
-        isAdShowing = false;
-        Time.timeScale = 1f;
-        AudioListener.pause = false;
-
-        // Restart callback handle करें (scene load होगा और OnSceneLoaded में callback call होगा)
+        // Restart के लिए scene load होने का इंतजार करें
         LoadAllAds();
     }
 }

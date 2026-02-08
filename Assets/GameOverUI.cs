@@ -21,7 +21,7 @@ public class GameOverUI : MonoBehaviour
         finalScore = PlayerPrefs.GetInt("FinalScore", 0);
         finalScoreText.text = "Final Score: " + finalScore;
 
-        restartButton.onClick.AddListener(RestartGame);
+        restartButton.onClick.AddListener(OnRestartButtonClick);
         mainMenuButton.onClick.AddListener(GoToMainMenu);
         rewardButton.onClick.AddListener(ShowRewardedAd);
 
@@ -34,6 +34,20 @@ public class GameOverUI : MonoBehaviour
     {
         if (AdManager.Instance != null)
             AdManager.Instance.OnRewardEarned -= DoubleScore;
+    }
+
+    private void OnRestartButtonClick()
+    {
+        // AdManager से restart request करें (ad show हो सकता है)
+        if (AdManager.Instance != null)
+        {
+            AdManager.Instance.RequestRestartWithAd(RestartGame);
+        }
+        else
+        {
+            // अगर AdManager नहीं है तो सीधे restart करें
+            RestartGame();
+        }
     }
 
     private void RestartGame()

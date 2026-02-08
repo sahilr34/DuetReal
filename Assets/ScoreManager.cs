@@ -90,7 +90,7 @@ public class ScoreManager : MonoBehaviour
     public void ResetScore()
     {
         score = 0;
-        nextAdScore = 3;
+        nextAdScore = 10;
         isScoring = false;
         UpdateScoreText();
     }
@@ -105,7 +105,7 @@ public class ScoreManager : MonoBehaviour
         if (score >= nextAdScore)
         {
             ShowAd();
-            nextAdScore += 3;
+            nextAdScore += 19;
         }
 
         if (allowWinCondition && score >= targetScore)
