@@ -6,6 +6,7 @@ public class ScoreManager : MonoBehaviour
 {
     [Header("UI")]
     public Text scoreText;
+    public Text targetScoreText; // Added target score text
 
     [Header("Score Settings")]
     private int score = 0;
@@ -13,7 +14,7 @@ public class ScoreManager : MonoBehaviour
     private int nextAdScore = 3;
 
     [Header("Win Condition")]
-    public int targetScore = 40;
+    public int targetScore = 40; // Will be overwritten with random value
     public string youWinSceneName = "YouWin";
     public string chaseSceneName = "Chase";
     public string endlessSceneName = "Endless";
@@ -52,13 +53,18 @@ public class ScoreManager : MonoBehaviour
         {
             ResetScore(); // Score reset करें
             StartScoring(); // फिर से scoring start करें
+
+            // FIX: Random target score हर बार जब Chase scene लोड हो तब सेट करें
+            SetTargetScoreForCurrentScene(currentScene);
         }
     }
 
     private void Start()
     {
         string currentScene = SceneManager.GetActiveScene().name;
-        allowWinCondition = currentScene == chaseSceneName;
+
+        // FIX: Random target score सिर्फ Start में नहीं, बल्कि हर बार scene load होने पर सेट करें
+        SetTargetScoreForCurrentScene(currentScene);
 
         FindScoreText();
         UpdateScoreText();
@@ -66,6 +72,20 @@ public class ScoreManager : MonoBehaviour
         // Cancel any existing invoke
         CancelInvoke(nameof(AddScore));
         StartScoring();
+    }
+
+    // FIX: नया method - target score को current scene के हिसाब से सेट करता है
+    private void SetTargetScoreForCurrentScene(string sceneName)
+    {
+        allowWinCondition = sceneName == chaseSceneName;
+
+        if (allowWinCondition)
+        {
+            // हर बार Chase scene लोड होने पर नया random target score
+            targetScore = Random.Range(50, 101); // 50-100 के बीच random
+        }
+
+        UpdateScoreText();
     }
 
     private void FindScoreText()
@@ -76,6 +96,16 @@ public class ScoreManager : MonoBehaviour
             if (scoreObj != null)
             {
                 scoreText = scoreObj.GetComponent<Text>();
+            }
+        }
+
+        // Added: Find target score text
+        if (targetScoreText == null)
+        {
+            GameObject targetObj = GameObject.FindGameObjectWithTag("TargetScoreText");
+            if (targetObj != null)
+            {
+                targetScoreText = targetObj.GetComponent<Text>();
             }
         }
     }
@@ -118,6 +148,10 @@ public class ScoreManager : MonoBehaviour
     {
         if (scoreText != null)
             scoreText.text = "Score: " + score;
+
+        // Added: Update target score text
+        if (targetScoreText != null)
+            targetScoreText.text = "Target: " + targetScore;
     }
 
     private void WinGame()

@@ -153,7 +153,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -207.00403, y: 757}
+  m_AnchoredPosition: {x: -238, y: 891}
   m_SizeDelta: {x: 569.228, y: 142.7719}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &18028018
@@ -178,11 +178,11 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 124
+    m_FontSize: 110
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 0
-    m_MaxSize: 135
+    m_MaxSize: 300
     m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -510,6 +510,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scoreText: {fileID: 18028018}
+  targetScoreText: {fileID: 0}
   targetScore: 10
   youWinSceneName: YouWin
   chaseSceneName: Chase
@@ -534,7 +535,7 @@ MonoBehaviour:
   iosRewardedAdUnitId: Rewarded_iOS
   testMode: 0
   adChanceOnRestart: 0.5
-  minTimeBetweenAds: 60
+  minTimeBetweenAds: 10
 --- !u!4 &608811918 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2148412142962102433, guid: 57970c6bb711ec24b8d98424b1806f3b, type: 3}
